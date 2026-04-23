@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KnightNet — Chess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════ AUTH SCREEN ═════════════════════════════════ -->
+<div id="authScreen" class="screen active">
+  <div class="auth-bg">
+    <div class="chess-pattern"></div>
+  </div>
+  <div class="auth-container">
+    <div class="auth-logo">
+      <span class="logo-piece">♞</span>
+      <h1>KnightNet</h1>
+      <p>Chess for the Raspberry Pi generation</p>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" id="registerTab" onclick="switchTab('register')">Register</button>
+      </div>
+      <div id="loginForm">
+        <div class="field-group">
+          <label>Username</label>
+          <input type="text" id="loginUser" placeholder="Enter username" autocomplete="username">
+        </div>
+        <div class="field-group">
+          <label>Password</label>
+          <input type="password" id="loginPass" placeholder="Enter password" autocomplete="current-password">
+        </div>
+        <div id="loginError" class="form-error"></div>
+        <button class="btn-primary full" onclick="login()">Sign In</button>
+      </div>
+      <div id="registerForm" class="hidden">
+        <div class="field-group">
+          <label>Username <span class="hint">(min. 3 chars)</span></label>
+          <input type="text" id="regUser" placeholder="Choose a username" autocomplete="username">
+        </div>
+        <div class="field-group">
+          <label>Password <span class="hint">(min. 6 chars)</span></label>
+          <input type="password" id="regPass" placeholder="Choose a password" autocomplete="new-password">
+        </div>
+        <div id="regError" class="form-error"></div>
+        <button class="btn-primary full" onclick="register()">Create Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ MAIN LOBBY ══════════════════════════════════ -->
+<div id="lobbyScreen" class="screen">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-piece-sm">♞</span>
+      <span class="logo-text">KnightNet</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showPanel('play')">
+        <span class="nav-icon">♟</span> Play
+      </button>
+      <button class="nav-item" onclick="showPanel('friends')">
+        <span class="nav-icon">👥</span> Friends
+        <span class="badge" id="friendsBadge" style="display:none"></span>
+      </button>
+      <button class="nav-item" onclick="showPanel('profile')">
+        <span class="nav-icon">👤</span> Profile
+      </button>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar-sm" id="sidebarAvatar"></div>
+      <div>
+        <div class="user-name-sm" id="sidebarName"></div>
+        <div class="user-rating-sm" id="sidebarRating"></div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content">
+
+    <!-- Play Panel -->
+    <div id="playPanel" class="panel active">
+      <div class="panel-header">
+        <h2>Play Chess</h2>
+        <p>Find an opponent and test your skills</p>
+      </div>
+      <div class="play-options">
+        <div class="play-card" id="queueCard">
+          <div class="play-card-icon">⚔</div>
+          <h3>Quick Match</h3>
+          <p>20 min per player · Auto-matched by rating</p>
+          <button class="btn-primary" id="queueBtn" onclick="toggleQueue()">Find Game</button>
+          <div class="queue-status hidden" id="queueStatus">
+            <div class="queue-spinner"></div>
+            <span id="queueText">Searching for opponent...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Friends Panel -->
+    <div id="friendsPanel" class="panel">
+      <div class="panel-header">
+        <h2>Friends</h2>
+        <div class="add-friend-row">
+          <input type="text" id="friendSearchInput" placeholder="Search by username…">
+          <button class="btn-secondary" onclick="sendFriendRequest()">Add Friend</button>
+        </div>
+        <div id="friendRequestResult" class="form-info"></div>
+      </div>
+
+      <div id="friendRequestsSection" class="section hidden">
+        <h3 class="section-title">Pending Requests</h3>
+        <div id="friendRequestsList"></div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">Your Friends</h3>
+        <div id="friendsList" class="friends-grid"></div>
+        <div id="noFriends" class="empty-state">No friends yet — search above to add someone!</div>
+      </div>
+    </div>
+
+    <!-- Profile Panel -->
+    <div id="profilePanel" class="panel">
+      <div class="panel-header">
+        <h2>Profile</h2>
+      </div>
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar"></div>
+        <div class="profile-info">
+          <h3 id="profileName"></h3>
+          <div class="profile-rating" id="profileRating"></div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card green">
+          <div class="stat-num" id="statWins">0</div>
+          <div class="stat-label">Wins</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-num" id="statLosses">0</div>
+          <div class="stat-label">Losses</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-num" id="statDraws">0</div>
+          <div class="stat-label">Draws</div>
+        </div>
+      </div>
+      <div class="section">
+        <h3 class="section-title">Recent Games</h3>
+        <div id="gameHistory"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════ GAME SCREEN ══════════════════════════════════ -->
+<div id="gameScreen" class="screen">
+  <div class="game-layout">
+    <!-- Opponent info (top) -->
+    <div class="player-bar top" id="topPlayerBar">
+      <div class="player-info">
+        <div class="player-avatar" id="topAvatar"></div>
+        <div>
+          <div class="player-name" id="topName">Opponent</div>
+          <div class="player-rating-badge" id="topRating"></div>
+        </div>
+      </div>
+      <div class="clock" id="topClock">20:00</div>
+    </div>
+
+    <!-- Board area -->
+    <div class="board-wrapper">
+      <div class="coordinates-file" id="fileCoords"></div>
+      <div class="board-and-rank">
+        <div class="coordinates-rank" id="rankCoords"></div>
+        <div id="chessBoard" class="chess-board"></div>
+      </div>
+      <!-- Promotion modal -->
+      <div id="promotionModal" class="promotion-modal hidden">
+        <div class="promotion-pieces" id="promotionPieces"></div>
+      </div>
+    </div>
+
+    <!-- My info (bottom) -->
+    <div class="player-bar bottom" id="bottomPlayerBar">
+      <div class="player-info">
+        <div class="player-avatar my-avatar" id="bottomAvatar"></div>
+        <div>
+          <div class="player-name" id="bottomName">You</div>
+          <div class="player-rating-badge" id="bottomRating"></div>
+        </div>
+      </div>
+      <div class="clock my-clock" id="bottomClock">20:00</div>
+    </div>
+
+    <!-- Game controls -->
+    <div class="game-controls">
+      <button class="ctrl-btn" onclick="offerDraw()" title="Offer Draw">½</button>
+      <button class="ctrl-btn resign" onclick="confirmResign()" title="Resign">⚑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ MODALS ═══════════════════════════════════════ -->
+<div id="modalOverlay" class="modal-overlay hidden" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
