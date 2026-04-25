@@ -2,10 +2,7 @@
    KnightNet — Chess Client
    ══════════════════════════════════════════════════════ */
 
-const PIECE_UNICODE = {
-  wK:'♔', wQ:'♕', wR:'♖', wB:'♗', wN:'♘', wP:'♙',
-  bK:'♚', bQ:'♛', bR:'♜', bB:'♝', bN:'♞', bP:'♟'
-};
+const PIECE_PATH = 'pieces';
 
 // ─── State ────────────────────────────────────────────────────
 let me = null;
@@ -302,11 +299,12 @@ function renderBoard() {
 
       // Piece
       const piece = game.board[r][c];
-      if (piece && PIECE_UNICODE[piece]) {
-        const span = document.createElement('span');
-        span.className = 'piece';
-        span.textContent = PIECE_UNICODE[piece];
-        sq.appendChild(span);
+      if (piece) {
+        const img = document.createElement('img');
+        img.className = 'piece';
+        img.src = `${PIECE_PATH}/${piece}.svg`;
+        img.alt = piece;
+        sq.appendChild(img);
       }
 
       sq.addEventListener('click', () => onSquareClick(r, c));
