@@ -455,13 +455,12 @@ html, body {
 
 /* Pieces */
 .piece {
-  font-size: calc(var(--sq-size) * 0.82);
-  line-height: 1;
-  cursor: pointer;
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
   z-index: 2;
   transition: filter 0.1s;
   pointer-events: none;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
 }
 
 /* Coordinates */
